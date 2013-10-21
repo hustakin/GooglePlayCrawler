@@ -1,4 +1,4 @@
-package src;
+package com.google.play.crawler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
