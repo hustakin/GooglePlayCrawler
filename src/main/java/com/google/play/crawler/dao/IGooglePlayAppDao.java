@@ -9,11 +9,14 @@ import com.google.play.crawler.bean.GooglePlayApp;
  * @date 2013-10-22
  */
 public interface IGooglePlayAppDao {
+	public List<String> groupGenres();
+
 	public void insertGooglePlayApp(GooglePlayApp app);
 
 	public GooglePlayApp findGooglePlayAppById(String id);
 
-	public List<GooglePlayApp> findGooglePlayApps(String genre, String downloadTimesFrom, String downloadTimesTo);
+	public List<GooglePlayApp> findGooglePlayApps(String genre,
+			String downloadTimesFrom, String downloadTimesTo);
 
 	public boolean existGooglePlayAppById(String id);
 

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import com.google.play.crawler.bean.GooglePlayApp;
 import com.google.play.crawler.dao.IGooglePlayAppDao;
 
@@ -28,6 +27,8 @@ public class QueryController {
 	@Autowired
 	private IGooglePlayAppDao appDao;
 
+	private String lastGenre = null;
+
 	@RequestMapping(value = "view")
 	public String view(
 			Model model,
@@ -35,9 +36,23 @@ public class QueryController {
 			@RequestParam(value = "downloadTimesFrom", required = false) String downloadTimesFrom,
 			@RequestParam(value = "downloadTimesTo", required = false) String downloadTimesTo,
 			@RequestParam(value = "pageNo", required = false) String pageNo) {
+		model.addAttribute("genres", appDao.groupGenres());
+		if (downloadTimesFrom != null && downloadTimesFrom.trim().equals(""))
+			downloadTimesFrom = null;
+		if (downloadTimesTo != null && downloadTimesTo.trim().equals(""))
+			downloadTimesTo = null;
+		if (genre == null && downloadTimesFrom == null
+				&& downloadTimesTo == null) {
+			model.addAttribute("appsNum", 0);
+			model.addAttribute("pageNum", 1);
+			model.addAttribute("currentPageNo", 1);
+			model.addAttribute("pageNo", 1);
+			lastGenre = null;
+			return "search";
+		}
 		model.addAttribute("genre", genre);
-		model.addAttribute("downloadFrom", downloadTimesFrom);
-		model.addAttribute("downloadTo", downloadTimesTo);
+		model.addAttribute("downloadTimesFrom", downloadTimesFrom);
+		model.addAttribute("downloadTimesTo", downloadTimesTo);
 		int intPageNo = 1;
 		if (pageNo != null && !pageNo.trim().equals("")) {
 			intPageNo = Integer.parseInt(pageNo);
@@ -47,7 +62,9 @@ public class QueryController {
 				downloadTimesFrom, downloadTimesTo);
 		List<GooglePlayApp> pageApps = retievePageList(apps, PAGE_NUM,
 				intPageNo);
-		if (pageApps.size() == 0 && intPageNo > 1) {
+		if ((lastGenre == null && genre != null)
+				|| (lastGenre != null && !lastGenre.equals(genre))
+				&& intPageNo > 1) {
 			intPageNo = 1;
 			pageApps = retievePageList(apps, PAGE_NUM, intPageNo);
 		}
@@ -56,6 +73,7 @@ public class QueryController {
 		model.addAttribute("currentPageNo", intPageNo);
 		model.addAttribute("pageNo", intPageNo);
 		model.addAttribute("apps", pageApps);
+		lastGenre = genre;
 		return "search";
 	}
 

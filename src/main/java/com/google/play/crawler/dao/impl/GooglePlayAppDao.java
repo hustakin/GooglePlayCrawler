@@ -1,15 +1,19 @@
 package com.google.play.crawler.dao.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.mapreduce.GroupBy;
+import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.google.play.crawler.bean.GooglePlayApp;
 import com.google.play.crawler.dao.IGooglePlayAppDao;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 
@@ -39,6 +43,23 @@ public class GooglePlayAppDao implements IGooglePlayAppDao {
 	}
 
 	@Override
+	public List<String> groupGenres() {
+		GroupBy groupBy = GroupBy.key("genre").initialDocument("{count:0}")
+				.reduceFunction("function(doc, prev){prev.count+=1}");
+		GroupByResults<GooglePlayApp> results = mongoTemplate.group(col,
+				groupBy, GooglePlayApp.class);
+		List<String> genres = new ArrayList<String>();
+		if (results == null)
+			return genres;
+		BasicDBList list = (BasicDBList) results.getRawResults().get("retval");
+		for (int i = 0; i < list.size(); i++) {
+			BasicDBObject obj = (BasicDBObject) list.get(i);
+			genres.add((String) obj.get("genre"));
+		}
+		return genres;
+	}
+
+	@Override
 	public void insertGooglePlayApp(GooglePlayApp app) {
 		mongoTemplate.save(app, col);
 	}
@@ -60,11 +81,11 @@ public class GooglePlayAppDao implements IGooglePlayAppDao {
 		}
 		if (downloadTimesFrom != null && !downloadTimesFrom.trim().equals("")) {
 			query.addCriteria(Criteria.where("downloadTimesFrom").is(
-					downloadTimesFrom));
+					Integer.parseInt(downloadTimesFrom)));
 		}
 		if (downloadTimesTo != null && !downloadTimesTo.trim().equals("")) {
 			query.addCriteria(Criteria.where("downloadTimesTo").is(
-					downloadTimesTo));
+					Integer.parseInt(downloadTimesTo)));
 		}
 		List<GooglePlayApp> apps = mongoTemplate.find(query,
 				GooglePlayApp.class, col);

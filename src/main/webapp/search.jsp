@@ -190,7 +190,7 @@ a.start_radio {
 	z-index: 40
 }
 
-input {
+select,input {
 	height: 30px;
 }
 
@@ -240,7 +240,19 @@ input[type=submit] {
 					<div class="nav-srh">
 						<div class="inp">
 							<span>
-								<input name="genre" type="text" title="类别" value="<c:out value='${genre}'/>" />
+								<select name="genre">
+									<option value="">全部</option>
+									<c:forEach var="everyGenre" items="${genres}">
+										<c:choose>
+											<c:when test="${everyGenre==genre}">
+												<option selected="selected" value="<c:out value='${everyGenre}' />"><c:out value='${everyGenre}' /></option>
+											</c:when>
+											<c:otherwise>
+												<option value="<c:out value='${everyGenre}' />"><c:out value='${everyGenre}' /></option>
+											</c:otherwise>
+										</c:choose>
+									</c:forEach>
+								</select>
 								&nbsp;&nbsp;&nbsp;&nbsp;<input name="downloadTimesFrom" type="text" title="下载下限" value="<c:out value='${downloadTimesFrom}'/>" />
 								<b>-</b>&nbsp;&nbsp;<input name="downloadTimesTo" type="text" title="下载上限" value="<c:out value='${downloadTimesTo}'/>" />
 								<input name="pageNo" type="hidden" value="<c:out value='${pageNo}'/>" />
@@ -369,7 +381,7 @@ input[type=submit] {
 				</div>
 			</div>
 		</div>
-
+									
         <form name="postForm" action="view" method="post">
           <input name="genre" type="hidden" value="<c:out value='${genre}'/>"/>
           <input name="downloadTimesFrom" type="hidden" value="<c:out value='${downloadTimesFrom}'/>" />
