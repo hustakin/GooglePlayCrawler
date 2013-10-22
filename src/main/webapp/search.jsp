@@ -189,6 +189,14 @@ a.start_radio {
 	margin-top: -35px;
 	z-index: 40
 }
+
+input {
+	height: 30px;
+}
+
+input[type=submit] {
+	width: 50px;
+}
 </style>
 <script type="text/javascript" src="<%=path%>/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript"
@@ -231,16 +239,13 @@ a.start_radio {
 				<div class="bd">
 					<div class="nav-srh">
 						<div class="inp">
-							<span> <input name="genre" type="text" title="类别"
-								size="22" width="20px" value="<c:out value='${genre}'/>" /> <input
-								name="downloadTimesFrom" type="text" title="下载下限" size="22"
-								width="20px" value="<c:out value='${downloadTimesFrom}'/>" /> <input
-								name="downloadTimesTo" type="text" title="下载上限" size="22"
-								width="20px" value="<c:out value='${downloadTimesTo}'/>" /> <input
-								name="pageNo" type="hidden" value="<c:out value='${pageNo}'/>" />
+							<span>
+								<input name="genre" type="text" title="类别" value="<c:out value='${genre}'/>" />
+								&nbsp;&nbsp;&nbsp;&nbsp;<input name="downloadTimesFrom" type="text" title="下载下限" value="<c:out value='${downloadTimesFrom}'/>" />
+								<b>-</b>&nbsp;&nbsp;<input name="downloadTimesTo" type="text" title="下载上限" value="<c:out value='${downloadTimesTo}'/>" />
+								<input name="pageNo" type="hidden" value="<c:out value='${pageNo}'/>" />
 							</span> <span> <input class="bn-srh" type="submit" value="搜索" />
-							</span> <input name="userId" value="<c:out value='${userId}'/>"
-								type="hidden" />
+							</span>
 						</div>
 					</div>
 				</div>
@@ -253,16 +258,62 @@ a.start_radio {
 				<div class="article">
 					<p class="ul first"></p>
 
+					<table width="100%">
+						<tr class="item">
+							<td width="100" valign="top">
+								<div class="paginator">
+									<c:choose>
+										<c:when test="${pageNo==1}">
+											<span class="prev"> &lt;前页 </span>
+										</c:when>
+										<c:otherwise>
+											<span class="prev"> <a
+												href="javascript:postAction('${pageNo-1}')"> &lt;前页 </a>
+												<link rel="prev" href="#" />
+											</span>
+										</c:otherwise>
+									</c:choose>
+									<c:forEach var="pageNo" begin="1" end="${pageNum}" step="1">
+										<c:choose>
+											<c:when test="${pageNo==currentPageNo}">
+												<span class="thispage"> <c:out value='${pageNo}' />
+												</span>
+											</c:when>
+											<c:otherwise>
+												<a href="javascript:postAction('${pageNo}')"> <c:out
+														value='${pageNo}' />
+												</a>
+											</c:otherwise>
+										</c:choose>
+									</c:forEach>
+									<c:choose>
+										<c:when test="${pageNo==pageNum}">
+											<span class="next"> 后页&gt; </span>
+										</c:when>
+										<c:otherwise>
+											<span class="next"> <a
+												href="javascript:postAction('${pageNo+1}')"> 后页&gt; </a>
+												<link rel="next" href="#" />
+											</span>
+										</c:otherwise>
+									</c:choose>
+									<span class="count"> (共<c:out value='${appsNum}' />条)
+									</span>
+								</div>
+							</td>
+						</tr>
+					</table>
+					
 					<c:forEach var="app" items="${apps}" varStatus="status">
 						<table width="100%">
 							<tr class="item">
 								<td valign="top">
 									<div class="pl2">
-										<b>《<c:out value='${app.genre}' />》</b>
-										&nbsp;&nbsp;&nbsp;&nbsp;
+										<b>《<c:out value='${app.genre}' />》
+										</b> &nbsp;&nbsp;&nbsp;&nbsp;
 										<c:out value='${app.downloadTimes}' />
-										&nbsp;&nbsp;&nbsp;&nbsp;
-										<a href="${app.url}"> <c:out value='${app.name}' /></a>
+										&nbsp;&nbsp;&nbsp;&nbsp; <b><a href="${app.url}"
+											target="_Blank"><c:out value='${app.name}' /></a></b>
 									</div>
 								</td>
 							</tr>
@@ -319,6 +370,12 @@ a.start_radio {
 			</div>
 		</div>
 
+        <form name="postForm" action="view" method="post">
+          <input name="genre" type="hidden" value="<c:out value='${genre}'/>"/>
+          <input name="downloadTimesFrom" type="hidden" value="<c:out value='${downloadTimesFrom}'/>" />
+          <input name="downloadTimesTo" type="hidden" value="<c:out value='${downloadTimesTo}'/>" />
+          <input name="pageNo" type="hidden" value="<c:out value='${pageNo}'/>" />
+		</form>
 		<div style="clear: both;"></div>
 		<div align="center">Google Play</div>
 </body>

@@ -8,9 +8,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +34,8 @@ public class Crawler {
 	private IGooglePlayAppDao appDao;
 
 	public Crawler() {
-		ApplicationContext context = new FileSystemXmlApplicationContext("classpath:mvc-servlet.xml");
+		ApplicationContext context = new FileSystemXmlApplicationContext(
+				"classpath:mvc-servlet.xml");
 		appDao = (IGooglePlayAppDao) context.getBean("appDao");
 	}
 
@@ -44,7 +44,8 @@ public class Crawler {
 		File file = new File(fileName);
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), charsetName));
+			reader = new BufferedReader(new InputStreamReader(
+					new FileInputStream(file), charsetName));
 			String tempString = null;
 			while ((tempString = reader.readLine()) != null) {
 				sb.append(tempString);
@@ -64,9 +65,11 @@ public class Crawler {
 		}
 	}
 
-	public void appendStrInFile(String fileName, String content, String charsetName) {
+	public void appendStrInFile(String fileName, String content,
+			String charsetName) {
 		try {
-			OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(fileName, true), charsetName);
+			OutputStreamWriter writer = new OutputStreamWriter(
+					new FileOutputStream(fileName, true), charsetName);
 			writer.write(content);
 			writer.close();
 		} catch (Exception e) {
@@ -74,14 +77,17 @@ public class Crawler {
 		}
 	}
 
-	public StringBuffer getContent(URL url, String id, String savePath, int retryTimes) {
+	public StringBuffer getContent(URL url, String id, String savePath,
+			int retryTimes) {
 		System.out.println("Requesting.. : " + url.toString());
 		StringBuffer contentBuffer = new StringBuffer();
 		HttpClient httpClient = new HttpClient();
-		httpClient.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
+		httpClient.getHttpConnectionManager().getParams()
+				.setConnectionTimeout(5000);
 		GetMethod getMethod = new GetMethod(url.toString());
 		getMethod.getParams().setParameter(HttpMethodParams.SO_TIMEOUT, 5000);
-		getMethod.getParams().setParameter(HttpMethodParams.RETRY_HANDLER, new DefaultHttpMethodRetryHandler());
+		getMethod.getParams().setParameter(HttpMethodParams.RETRY_HANDLER,
+				new DefaultHttpMethodRetryHandler());
 		boolean finish = false;
 		while (!finish) {
 			try {
@@ -89,63 +95,74 @@ public class Crawler {
 					finish = true;
 				int statusCode = httpClient.executeMethod(getMethod);
 				if (statusCode != HttpStatus.SC_OK) {
-					System.err.println("Method failed: " + getMethod.getStatusLine());
+					System.err.print("Method failed: "
+							+ getMethod.getStatusLine());
 					finish = true;
 				} else {
 					byte[] responseBody = getMethod.getResponseBody();
 					String content = new String(responseBody, "UTF-8");
 					contentBuffer.append(content);
-					File apkPageFile = new File(savePath + File.separator + id + ".htm");
+					File apkPageFile = new File(savePath + File.separator + id
+							+ ".htm");
 					if (!apkPageFile.exists()) {
 						apkPageFile.createNewFile();
-						System.err.println("Saved file:" + apkPageFile.getAbsolutePath());
-						appendStrInFile(apkPageFile.getAbsolutePath(), content, "UTF-8");
+						System.err.print("Saved file:"
+								+ apkPageFile.getAbsolutePath());
+						appendStrInFile(apkPageFile.getAbsolutePath(), content,
+								"UTF-8");
 						parsePage(apkPageFile.getAbsolutePath());
 					}
 					finish = true;
 				}
 			} catch (HttpException e) {
-				System.err.println("Please check your provided http address!");
+				System.err.print("Please check your provided http address!");
+			} catch (SocketException e) {
+				System.err.print(".");
 			} catch (Exception e) {
-				System.err.println("Some error happened when get content");
+				System.err.print("Some error happened when get content");
+				e.printStackTrace();
 			} finally {
 				getMethod.releaseConnection();
 			}
 		}
+		System.err.println();
 		return contentBuffer;
 	}
 
-	public void getMatchedUrls(StringBuffer contentBuffer, String prevString, String patternString, String postString, List<String> crawledUrls, String savePath,
-			String crawledUrlsLog, int retryTimes) {
-		Pattern pattern = Pattern.compile(patternString, Pattern.CASE_INSENSITIVE);
+	public void getMatchedUrls(StringBuffer contentBuffer, String prevString,
+			String patternString, String postString, String savePath,
+			int retryTimes) {
+		Pattern pattern = Pattern.compile(patternString,
+				Pattern.CASE_INSENSITIVE);
 		Matcher matcher = pattern.matcher(contentBuffer);
 
 		while (matcher.find()) {
 			String matchedUrl = matcher.group().trim();
 			String matchedId = matcher.group(1).trim();
-			// if (appDao.existGooglePlayAppById(matchedId))
-			if (crawledUrls.contains(matchedUrl))
+			if (appDao.existGooglePlayAppById(matchedId))
 				continue;
 			System.out.println("******* Found matching: " + matchedUrl);
-			crawledUrls.add(matchedUrl);
 			try {
 				URL url = new URL(prevString + matchedUrl + postString);
 				StringBuffer sb = null;
-				File contentFile = new File(System.getProperty("user.dir") + System.getProperty("file.separator") + "output" + System.getProperty("file.separator") + matchedId
+				File contentFile = new File(System.getProperty("user.dir")
+						+ System.getProperty("file.separator") + "output"
+						+ System.getProperty("file.separator") + matchedId
 						+ ".htm");
 				if (contentFile.exists()) {
-					System.out.println("Reading.. : " + contentFile.getAbsolutePath());
+					System.out.println("Reading.. : "
+							+ contentFile.getAbsolutePath());
 					sb = readFileByLines(contentFile.getAbsolutePath(), "UTF-8");
 				} else {
 					sb = getContent(url, matchedId, savePath, retryTimes);
-					appendStrInFile(crawledUrlsLog, matchedUrl + "\r\n", "UTF-8");
 					try {
 						Thread.sleep(1500);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
-				getMatchedUrls(sb, prevString, patternString, postString, crawledUrls, savePath, crawledUrlsLog, retryTimes);
+				getMatchedUrls(sb, prevString, patternString, postString,
+						savePath, retryTimes);
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
@@ -168,12 +185,14 @@ public class Crawler {
 				String downloadTimes = null;
 				String downloadTimesFrom = null;
 				String downloadTimesTo = null;
-				String id = url.substring(url.lastIndexOf('\\') + 1, url.length() - 4);
+				String id = url.substring(url.lastIndexOf('\\') + 1,
+						url.length() - 4);
 				url = "https://play.google.com/store/apps/details?id=" + id;
 
 				MyTagFilter nameFilter = new MyTagFilter("div");
 				nameFilter.addAttributeFilter("class", "document-title");
-				NodeList nameList = bodyDiv.getChildren().extractAllNodesThatMatch(nameFilter, true);
+				NodeList nameList = bodyDiv.getChildren()
+						.extractAllNodesThatMatch(nameFilter, true);
 				if (nameList.size() > 0) {
 					Div nameDiv = (Div) nameList.elements().nextNode();
 					nameDiv = (Div) nameDiv.getChild(1);
@@ -183,7 +202,8 @@ public class Crawler {
 
 				MyTagFilter genreFilter = new MyTagFilter("span");
 				genreFilter.addAttributeFilter("itemprop", "genre");
-				NodeList genreList = bodyDiv.getChildren().extractAllNodesThatMatch(genreFilter, true);
+				NodeList genreList = bodyDiv.getChildren()
+						.extractAllNodesThatMatch(genreFilter, true);
 				if (genreList.size() > 0) {
 					Span genreSpan = (Span) genreList.elements().nextNode();
 					TextNode genreTextNode = (TextNode) genreSpan.getChild(0);
@@ -191,11 +211,14 @@ public class Crawler {
 				}
 
 				MyTagFilter downloadTimesFilter = new MyTagFilter("div");
-				downloadTimesFilter.addAttributeFilter("itemprop", "numDownloads");
-				NodeList downloadList = bodyDiv.getChildren().extractAllNodesThatMatch(downloadTimesFilter, true);
+				downloadTimesFilter.addAttributeFilter("itemprop",
+						"numDownloads");
+				NodeList downloadList = bodyDiv.getChildren()
+						.extractAllNodesThatMatch(downloadTimesFilter, true);
 				if (downloadList.size() > 0) {
 					Div downloadDiv = (Div) downloadList.elements().nextNode();
-					TextNode downloadTextNode = (TextNode) downloadDiv.getChild(0);
+					TextNode downloadTextNode = (TextNode) downloadDiv
+							.getChild(0);
 					downloadTimes = downloadTextNode.getText();
 					String[] sp = downloadTimes.trim().split("-");
 					downloadTimesFrom = sp[0].trim().replace(",", "");
@@ -230,12 +253,12 @@ public class Crawler {
 	public static void main(String[] args) throws MalformedURLException {
 		Crawler crawler = new Crawler();
 		String url = "https://play.google.com/store?hl=en";
-		String outputPath = System.getProperty("user.dir") + System.getProperty("file.separator") + "output";
-		String crawledUrlsLog = System.getProperty("user.dir") + System.getProperty("file.separator") + "log" + System.getProperty("file.separator") + "crawledUrl.log";
-
-		StringBuffer sb = crawler.getContent(new URL(url), "main", outputPath, 100);
-		List<String> crawledUrls = new ArrayList<String>();
-		crawler.getMatchedUrls(sb, "https://play.google.com", "/store/apps/details\\?id=([^\"&<]+)", "", crawledUrls, outputPath, crawledUrlsLog, 100);
+		String outputPath = System.getProperty("user.dir")
+				+ System.getProperty("file.separator") + "output";
+		StringBuffer sb = crawler.getContent(new URL(url), "main", outputPath,
+				100);
+		crawler.getMatchedUrls(sb, "https://play.google.com",
+				"/store/apps/details\\?id=([^\"&<]+)", "", outputPath, 100);
 
 		// File outputPathFile = new File(outputPath);
 		// File[] pageFiles = outputPathFile.listFiles(new FileFilter() {

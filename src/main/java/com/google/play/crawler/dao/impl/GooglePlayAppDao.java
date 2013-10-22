@@ -30,6 +30,12 @@ public class GooglePlayAppDao implements IGooglePlayAppDao {
 		dbCol.ensureIndex(new BasicDBObject().append("genre", 1));
 		dbCol.ensureIndex(new BasicDBObject().append("downloadTimesFrom", 1));
 		dbCol.ensureIndex(new BasicDBObject().append("downloadTimesTo", 1));
+		dbCol.ensureIndex(new BasicDBObject().append("genre", 1).append(
+				"downloadTimesFrom", 1));
+		dbCol.ensureIndex(new BasicDBObject().append("genre", 1).append(
+				"downloadTimesTo", 1));
+		dbCol.ensureIndex(new BasicDBObject().append("genre", 1)
+				.append("downloadTimesFrom", 1).append("downloadTimesTo", 1));
 	}
 
 	@Override
@@ -40,23 +46,28 @@ public class GooglePlayAppDao implements IGooglePlayAppDao {
 	@Override
 	public GooglePlayApp findGooglePlayAppById(String id) {
 		Query query = new Query(Criteria.where("_id").is(id));
-		GooglePlayApp app = mongoTemplate.findOne(query, GooglePlayApp.class, col);
+		GooglePlayApp app = mongoTemplate.findOne(query, GooglePlayApp.class,
+				col);
 		return app;
 	}
 
 	@Override
-	public List<GooglePlayApp> findGooglePlayApps(String genre, String downloadTimesFrom, String downloadTimesTo) {
+	public List<GooglePlayApp> findGooglePlayApps(String genre,
+			String downloadTimesFrom, String downloadTimesTo) {
 		Query query = new Query();
 		if (genre != null && !genre.trim().equals("")) {
 			query.addCriteria(Criteria.where("genre").is(genre));
 		}
 		if (downloadTimesFrom != null && !downloadTimesFrom.trim().equals("")) {
-			query.addCriteria(Criteria.where("downloadTimesFrom").is(downloadTimesFrom));
+			query.addCriteria(Criteria.where("downloadTimesFrom").is(
+					downloadTimesFrom));
 		}
 		if (downloadTimesTo != null && !downloadTimesTo.trim().equals("")) {
-			query.addCriteria(Criteria.where("downloadTimesTo").is(downloadTimesTo));
+			query.addCriteria(Criteria.where("downloadTimesTo").is(
+					downloadTimesTo));
 		}
-		List<GooglePlayApp> apps = mongoTemplate.find(query, GooglePlayApp.class, col);
+		List<GooglePlayApp> apps = mongoTemplate.find(query,
+				GooglePlayApp.class, col);
 		return apps;
 	}
 

@@ -22,16 +22,19 @@ import com.google.play.crawler.dao.IGooglePlayAppDao;
 @RequestMapping("/android/*")
 public class QueryController {
 
-	private static final int PAGE_NUM = 100;
+	private static final int PAGE_NUM = 40;
 
 	@Qualifier("appDao")
 	@Autowired
 	private IGooglePlayAppDao appDao;
 
 	@RequestMapping(value = "view")
-	public String view(Model model, @RequestParam(value = "genre", required = false) String genre,
+	public String view(
+			Model model,
+			@RequestParam(value = "genre", required = false) String genre,
 			@RequestParam(value = "downloadTimesFrom", required = false) String downloadTimesFrom,
-			@RequestParam(value = "downloadTimesTo", required = false) String downloadTimesTo, @RequestParam(value = "pageNo", required = false) String pageNo) {
+			@RequestParam(value = "downloadTimesTo", required = false) String downloadTimesTo,
+			@RequestParam(value = "pageNo", required = false) String pageNo) {
 		model.addAttribute("genre", genre);
 		model.addAttribute("downloadFrom", downloadTimesFrom);
 		model.addAttribute("downloadTo", downloadTimesTo);
@@ -39,16 +42,25 @@ public class QueryController {
 		if (pageNo != null && !pageNo.trim().equals("")) {
 			intPageNo = Integer.parseInt(pageNo);
 		}
-		model.addAttribute("pageNo", intPageNo);
-		List<GooglePlayApp> apps = appDao.findGooglePlayApps(genre, downloadTimesFrom, downloadTimesTo);
+
+		List<GooglePlayApp> apps = appDao.findGooglePlayApps(genre,
+				downloadTimesFrom, downloadTimesTo);
+		List<GooglePlayApp> pageApps = retievePageList(apps, PAGE_NUM,
+				intPageNo);
+		if (pageApps.size() == 0 && intPageNo > 1) {
+			intPageNo = 1;
+			pageApps = retievePageList(apps, PAGE_NUM, intPageNo);
+		}
 		model.addAttribute("appsNum", apps.size());
 		model.addAttribute("pageNum", apps.size() / PAGE_NUM + 1);
 		model.addAttribute("currentPageNo", intPageNo);
-		model.addAttribute("apps", retievePageList(apps, PAGE_NUM, intPageNo));
+		model.addAttribute("pageNo", intPageNo);
+		model.addAttribute("apps", pageApps);
 		return "search";
 	}
 
-	private List<GooglePlayApp> retievePageList(List<GooglePlayApp> apps, int limit, int pageNo) {
+	private List<GooglePlayApp> retievePageList(List<GooglePlayApp> apps,
+			int limit, int pageNo) {
 		List<GooglePlayApp> sortPageApps = new ArrayList<GooglePlayApp>();
 		Collections.sort(apps);
 		int startNo = limit * (pageNo - 1);
