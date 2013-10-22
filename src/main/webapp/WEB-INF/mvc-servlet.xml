@@ -11,8 +11,9 @@
     http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd"
 	xmlns:context="http://www.springframework.org/schema/context">
 
-	<context:property-placeholder location="/WEB-INF/spring.properties" ignore-resource-not-found="true" ignore-unresolvable="true" />
-	<context:component-scan base-package="com.hudao.weixin.server.controller"></context:component-scan>
+	<context:property-placeholder location="/WEB-INF/spring.properties"
+		ignore-resource-not-found="true" ignore-unresolvable="true" />
+	<context:component-scan base-package="com.google.play.crawler.controller"></context:component-scan>
 
 	<mongo:db-factory id="mongoDbFactory" host="${db.host}"
 		port="${db.port}" dbname="${db.name}" username="${db.user}" password="${db.password}"
@@ -78,5 +79,5 @@
 		</property>
 	</bean>
 
-	<bean id="vipUserDao" class="com.hudao.weixin.server.dao.impl.VipUserDao" />
+	<bean id="appDao" class="com.google.play.crawler.dao.impl.GooglePlayAppDao" />
 </beans>

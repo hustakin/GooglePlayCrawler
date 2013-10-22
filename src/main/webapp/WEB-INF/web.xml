@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-	<display-name>Hudao Weixin Server</display-name>
+	<display-name>Crawler Server</display-name>
 
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
@@ -15,7 +15,7 @@
 	 </context-param>
 
 	<listener>  
-	     <listener-class>com.hudao.weixin.server.util.LogbackConfigListener</listener-class>  
+	     <listener-class>com.google.play.crawler.util.LogbackConfigListener</listener-class>  
 	</listener> 
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>

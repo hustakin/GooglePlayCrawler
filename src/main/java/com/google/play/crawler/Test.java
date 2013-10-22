@@ -120,12 +120,20 @@ public class Test {
 			crawledUrls.add(matchedUrl);
 			try {
 				URL url = new URL(prevString + matchedUrl + postString);
-				StringBuffer sb = getContent(url, matchedId, savePath, retryTimes);
-				appendStrInFile(crawledUrlsLog, matchedUrl + "\r\n", "UTF-8");
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				StringBuffer sb = null;
+				File contentFile = new File(System.getProperty("user.dir") + System.getProperty("file.separator") + "output" + System.getProperty("file.separator") + matchedId
+						+ ".htm");
+				if (contentFile.exists()) {
+					System.out.println("Reading.. : " + contentFile.getAbsolutePath());
+					sb = readFileByLines(contentFile.getAbsolutePath(), "UTF-8");
+				} else {
+					sb = getContent(url, matchedId, savePath, retryTimes);
+					appendStrInFile(crawledUrlsLog, matchedUrl + "\r\n", "UTF-8");
+					try {
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 				getMatchedUrls(sb, prevString, patternString, postString, crawledUrls, savePath, crawledUrlsLog, retryTimes);
 			} catch (MalformedURLException e) {
@@ -189,31 +197,25 @@ public class Test {
 	}
 
 	public static void main(String[] args) throws MalformedURLException {
-		// String url = "https://play.google.com/store?hl=en";
-		// String outputPath = System.getProperty("user.dir")
-		// + System.getProperty("file.separator") + "output";
-		// String crawledUrlsLog = System.getProperty("user.dir")
-		// + System.getProperty("file.separator") + "log"
-		// + System.getProperty("file.separator") + "crawledUrl.log";
-		//
-		// StringBuffer sb = getContent(new URL(url), "main", outputPath, 100);
-		// List<String> crawledUrls = new ArrayList<String>();
-		// getMatchedUrls(sb, "https://play.google.com",
-		// "/store/apps/details\\?id=([^\"&<]+)", "", crawledUrls,
-		// outputPath, crawledUrlsLog, 100);
+		String url = "https://play.google.com/store?hl=en";
+		String outputPath = System.getProperty("user.dir") + System.getProperty("file.separator") + "output";
+		String crawledUrlsLog = System.getProperty("user.dir") + System.getProperty("file.separator") + "log" + System.getProperty("file.separator") + "crawledUrl.log";
 
-		File outputPathFile = new File("C://Tools//workspace//GooglePlayCrawler//output//");
-		File[] pageFiles = outputPathFile.listFiles(new FileFilter() {
-			public boolean accept(File pathname) {
-				if (pathname.getName().endsWith("htm") && pathname.canRead() && pathname.canWrite())
-					return true;
-				return false;
-			}
-		});
-		for (File file : pageFiles) {
-			parsePage(file.getAbsolutePath());
-		}
+		StringBuffer sb = getContent(new URL(url), "main", outputPath, 100);
+		List<String> crawledUrls = new ArrayList<String>();
+		getMatchedUrls(sb, "https://play.google.com", "/store/apps/details\\?id=([^\"&<]+)", "", crawledUrls, outputPath, crawledUrlsLog, 100);
 
-		// parsePage("C://Tools//workspace//GooglePlayCrawler//output//com.booking.htm");
+		// File outputPathFile = new File(outputPath);
+		// File[] pageFiles = outputPathFile.listFiles(new FileFilter() {
+		// public boolean accept(File pathname) {
+		// if (pathname.getName().endsWith("htm") && pathname.canRead() &&
+		// pathname.canWrite())
+		// return true;
+		// return false;
+		// }
+		// });
+		// for (File file : pageFiles) {
+		// parsePage(file.getAbsolutePath());
+		// }
 	}
 }
