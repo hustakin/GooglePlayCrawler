@@ -156,7 +156,7 @@ public class Crawler {
 				} else {
 					sb = getContent(url, matchedId, savePath, retryTimes);
 					try {
-						Thread.sleep(500);
+						Thread.sleep(200);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
